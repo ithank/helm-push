@@ -14,11 +14,14 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"bufio"
+	"syscall"
 
 	cm "github.com/ithank/helm-push/pkg/chartmuseum"
 	"github.com/ithank/helm-push/pkg/helm"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 type (
@@ -197,12 +200,12 @@ func (p *pushCmd) push() error {
 		chart.SetVersion(p.chartVersion)
 	}
 
-	if p.prompt != "" {
-		username, password := credentials()
+	// username/password override(s)
+	username := repo.Username
+	password := repo.Password
+	if p.prompt == true {
+		username, password = credentials()
 	} else {
-		// username/password override(s)
-		username := repo.Username
-		password := repo.Password
 		if p.username != "" {
 			username = p.username
 		}
