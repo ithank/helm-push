@@ -15,8 +15,8 @@ import (
 	"strconv"
 	"strings"
 
-	cm "github.com/chartmuseum/helm-push/pkg/chartmuseum"
-	"github.com/chartmuseum/helm-push/pkg/helm"
+	cm "github.com/ithank/helm-push/pkg/chartmuseum"
+	"github.com/ithank/helm-push/pkg/helm"
 	"github.com/ghodss/yaml"
 	"github.com/spf13/cobra"
 )
