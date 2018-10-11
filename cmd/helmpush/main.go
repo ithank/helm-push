@@ -37,6 +37,7 @@ type (
 		certFile           string
 		keyFile            string
 		insecureSkipVerify bool
+		prompt		   bool
 	}
 
 	config struct {
@@ -90,6 +91,7 @@ func newPushCmd(args []string) *cobra.Command {
 	f.StringVarP(&p.chartVersion, "version", "v", "", "Override chart version pre-push")
 	f.StringVarP(&p.username, "username", "u", "", "Override HTTP basic auth username [$HELM_REPO_USERNAME]")
 	f.StringVarP(&p.password, "password", "p", "", "Override HTTP basic auth password [$HELM_REPO_PASSWORD]")
+	f.BoolVarP(&p.prompt, "prompt", "", false, "Prompt for credentials [$HELM_REPO_PROMPT]")
 	f.StringVarP(&p.accessToken, "access-token", "", "", "Send token in Authorization header [$HELM_REPO_ACCESS_TOKEN]")
 	f.StringVarP(&p.authHeader, "auth-header", "", "", "Alternative header to use for token auth [$HELM_REPO_AUTH_HEADER]")
 	f.StringVarP(&p.contextPath, "context-path", "", "", "ChartMuseum context path [$HELM_REPO_CONTEXT_PATH]")
@@ -103,6 +105,10 @@ func newPushCmd(args []string) *cobra.Command {
 }
 
 func (p *pushCmd) setFieldsFromEnv() {
+
+	if v, ok := os.LookupEnv("HELM_REPO_PROMPT"); ok {
+		p.prompt, _ = strconv.ParseBool(v)
+	}
 	if v, ok := os.LookupEnv("HELM_REPO_USERNAME"); ok && p.username == "" {
 		p.username = v
 	}
@@ -191,14 +197,18 @@ func (p *pushCmd) push() error {
 		chart.SetVersion(p.chartVersion)
 	}
 
-	// username/password override(s)
-	username := repo.Username
-	password := repo.Password
-	if p.username != "" {
-		username = p.username
-	}
-	if p.password != "" {
-		password = p.password
+	if p.prompt != "" {
+		username, password := credentials()
+	} else {
+		// username/password override(s)
+		username := repo.Username
+		password := repo.Password
+		if p.username != "" {
+			username = p.username
+		}
+		if p.password != "" {
+			password = p.password
+		}
 	}
 
 	// in case the repo is stored with cm:// protocol, remove it
@@ -361,6 +371,24 @@ func getIndexDownloader(client *cm.Client) helm.IndexDownloader {
 		return b, nil
 	}
 }
+
+
+func credentials() (string, string) {
+    reader := bufio.NewReader(os.Stdin)
+
+    fmt.Print("Enter Username: ")
+    username, _ := reader.ReadString('\n')
+
+    fmt.Print("Enter Password: ")
+    bytePassword, err := terminal.ReadPassword(int(syscall.Stdin))
+    if err == nil {
+        fmt.Println("\nPassword typed: " + string(bytePassword))
+    }
+    password := string(bytePassword)
+
+    return strings.TrimSpace(username), strings.TrimSpace(password)
+}
+
 
 func main() {
 	cmd := newPushCmd(os.Args[1:])
