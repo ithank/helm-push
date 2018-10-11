@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-# Copied w/ love from the excellent hypnoglow/helm-s3
+## Copied w/ love from the excellent hypnoglow/helm-s3
 
 if [ -n "${HELM_PUSH_PLUGIN_NO_INSTALL_HOOK}" ]; then
     echo "Development mode: not downloading versioned release."
